@@ -47,71 +47,90 @@ class _CalculadoraPageState extends State<CalculadoraPage> {
     });
   }
 
-  // Método recursivo para encontrar el máximo común divisor usando el algoritmo de Euclides
+  // Método recursivo para encontrar el máximo común divisor usando el algoritmo de Euclides con división y módulo
   int mcd(int a, int b) {
-    // Si los números son iguales, ese es el máximo común divisor
-    if (a == b) {
-      return a;
+    // Si el resto es cero, el divisor es el máximo común divisor
+    if (a % b == 0) {
+      return b;
     }
-
-    // Si el primero es mayor que el segundo, restar el segundo al primero y volver a llamar al método
-    if (a > b) {
-      return mcd(a - b, b);
+    // Si el resto es distinto de cero, se llama al método con el divisor y el resto como nuevos parámetros
+    else {
+      return mcd(b, a % b);
     }
-
-    // Si el segundo es mayor que el primero, restar el primero al segundo y volver a llamar al método
-    if (b > a) {
-      return mcd(a, b - a);
-    }
-
-    // Este caso no debería ocurrir, pero se devuelve 0 por si acaso
-    return 0;
   }
 
-  // Método para mostrar los pasos de la operación
+  // Método para mostrar los pasos de la operación en una tabla
   void mostrarPasos() {
-    // Crear una cadena con los pasos
-    String pasos = 'Para encontrar el máximo común divisor de $numero1 y $numero2 usando el algoritmo de Euclides, se deben seguir los siguientes pasos:\n\n';
-
+    // Crear una lista con los encabezados de la tabla
+    List<String> encabezados = ['Paso', 'Operación', 'Ecuación'];
+    // Crear una lista vacía para almacenar las filas de la tabla
+    List<List<String>> filas = [];
     // Variables auxiliares para almacenar los números y el resultado parcial
     int a = numero1;
     int b = numero2;
     int r = mcd(a, b);
-
-    // Mientras los números no sean iguales, ir restando el menor al mayor y añadiendo un paso a la cadena
-    while (a != b) {
-      if (a > b) {
-        pasos += '$a - $b = ${a - b}\n';
-        a -= b;
-      } else {
-        pasos += '$b - $a = ${b - a}\n';
-        b -= a;
-      }
+    // Variable para contar los pasos
+    int paso = 1;
+    // Mientras el resto sea distinto de cero, ir dividiendo el mayor entre el menor y añadiendo una fila a la lista
+    while (a % b != 0) {
+      // Añadir una fila con el paso, la operación y la ecuación
+      filas.add([
+        paso.toString(),
+        '$a / $b',
+        '$a = ${a ~/ b} * $b + ${a % b}'
+      ]);
+      // Actualizar los valores de a y b con el divisor y el resto
+      int temp = a;
+      a = b;
+      b = temp % b;
+      // Incrementar el contador de pasos
+      paso++;
     }
-
-    // Añadir el resultado final a la cadena de pasos
-    pasos += '\nEl máximo común divisor es: $r';
-
-    // Mostrar la cadena de pasos en un cuadro de diálogo
+    // Añadir una fila final con el resultado
+    filas.add([
+      paso.toString(),
+      '$a / $b',
+      '$a = ${a ~/ b} * $b + ${a % b} -> MCD = $b'
+    ]);
+    // Mostrar la tabla en un cuadro de diálogo
     showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Pasos'),
-          content: SingleChildScrollView(
-            child: Text(pasos),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cerrar'),
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Pasos'),
+            content: SingleChildScrollView(
+              child: SingleChildScrollView( // Usar SingleChildScrollView para hacer scroll horizontal
+                scrollDirection: Axis.horizontal, // Establecer la dirección del scroll a horizontal
+                child: Table(
+                  border: TableBorder.all(),
+                  columnWidths: {
+                    0: FixedColumnWidth(50),
+                    1: FixedColumnWidth(100),
+                    2: FixedColumnWidth(200)
+                  },
+                  children: [
+                    // Crear una fila con los encabezados de la tabla
+                    TableRow(
+                        children: encabezados
+                            .map((e) => Center(child: Text(e)))
+                            .toList()),
+                    // Crear las filas con los datos de la lista
+                    ...filas.map((fila) => TableRow(
+                        children: fila.map((e) => Center(child: Text(e))).toList()))
+                  ],
+                ),
+              ),
             ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Cerrar'),
+              ),
+            ],
+          );
+        });
   }
 
   @override
